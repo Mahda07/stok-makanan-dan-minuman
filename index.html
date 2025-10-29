@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -134,7 +135,9 @@
             color: var(--dark);
         }
         
-        input, select, textarea {
+        input,
+        select,
+        textarea {
             width: 100%;
             padding: 12px 15px;
             border: 1px solid #ddd;
@@ -143,7 +146,9 @@
             transition: all 0.3s;
         }
         
-        input:focus, select:focus, textarea:focus {
+        input:focus,
+        select:focus,
+        textarea:focus {
             border-color: var(--primary);
             outline: none;
             box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
@@ -225,7 +230,8 @@
             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
         }
         
-        .stok-table th, .stok-table td {
+        .stok-table th,
+        .stok-table td {
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #eee;
@@ -459,6 +465,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -571,7 +578,7 @@
     </div>
     
     <div id="notification" class="notification"></div>
-
+    
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js'
         import {
@@ -583,11 +590,11 @@
             addDoc,
             deleteDoc,
             updateDoc,
-            query, 
+            query,
             orderBy,
             where
         } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js'
-
+        
         const firebaseConfig = {
             apiKey: "AIzaSyCfqZD7UZZt-GWmtNhfJyksrv3-8ENRjto",
             authDomain: "insan-cemerlang-d5574.firebaseapp.com",
@@ -597,11 +604,11 @@
             appId: "1:1035937160050:web:6d77d3874c3f78b2811beb",
             measurementId: "G-EVVQ80Q08C"
         };
-
+        
         // Inisialisasi Firebase
         const aplikasi = initializeApp(firebaseConfig)
         const basisdata = getFirestore(aplikasi)
-
+        
         // Fungsi untuk mengambil data stok
         export async function ambilStok() {
             try {
@@ -624,7 +631,7 @@
                 return [];
             }
         }
-
+        
         // Fungsi untuk menambahkan item stok
         export async function tambahStok(nama, kategori, stok, satuan, harga, status, deskripsi) {
             try {
@@ -639,7 +646,7 @@
                     deskripsi: deskripsi,
                     tanggal_ditambahkan: new Date()
                 });
-
+                
                 console.log("Berhasil menyimpan stok");
                 return refDokumen.id;
             } catch (e) {
@@ -647,7 +654,7 @@
                 return null;
             }
         }
-
+        
         // Fungsi untuk menghapus item stok
         export async function hapusStok(id) {
             try {
@@ -659,7 +666,7 @@
                 return false;
             }
         }
-
+        
         // Fungsi untuk memperbarui item stok
         export async function perbaruiStok(id, nama, kategori, stok, satuan, harga, status, deskripsi) {
             try {
@@ -680,7 +687,7 @@
                 return false;
             }
         }
-
+        
         // DOM Elements
         const formTambahItem = document.getElementById('form-tambah-item');
         const tabelStok = document.getElementById('tabel-stok');
@@ -690,10 +697,10 @@
         const notification = document.getElementById('notification');
         const summaryCards = document.getElementById('summary-cards');
         const filterButtons = document.querySelectorAll('.filter-btn');
-
+        
         let currentFilter = 'all';
         let allStokData = [];
-
+        
         // Tampilkan notifikasi
         function tampilkanNotifikasi(pesan, tipe) {
             const icon = tipe === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
@@ -705,7 +712,7 @@
                 notification.classList.remove('show');
             }, 3000);
         }
-
+        
         // Format angka ke format Rupiah
         function formatRupiah(angka) {
             return new Intl.NumberFormat('id-ID', {
@@ -714,7 +721,7 @@
                 minimumFractionDigits: 0
             }).format(angka);
         }
-
+        
         // Render data stok ke tabel
         async function renderStok() {
             loading.style.display = 'block';
@@ -730,12 +737,12 @@
             
             loading.style.display = 'none';
         }
-
+        
         // Filter stok berdasarkan kategori
         function filterStokByCategory(kategori) {
-            const filteredData = kategori === 'all' 
-                ? allStokData 
-                : allStokData.filter(item => item.kategori === kategori);
+            const filteredData = kategori === 'all' ?
+                allStokData :
+                allStokData.filter(item => item.kategori === kategori);
             
             if (filteredData.length === 0) {
                 tabelStok.style.display = 'none';
@@ -778,7 +785,7 @@
                 `).join('');
             }
         }
-
+        
         // Update summary cards
         function updateSummaryCards(dataStok) {
             const totalItem = dataStok.length;
@@ -806,7 +813,7 @@
                 </div>
             `;
         }
-
+        
         // Event listener untuk form tambah item
         formTambahItem.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -829,7 +836,7 @@
                 tampilkanNotifikasi('Gagal menambahkan item!', 'error');
             }
         });
-
+        
         // Event listener untuk filter buttons
         filterButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -842,7 +849,7 @@
                 filterStokByCategory(currentFilter);
             });
         });
-
+        
         // Fungsi untuk menghapus item (dibuat global agar bisa diakses dari onclick)
         window.hapusItem = async function(id) {
             if (confirm('Apakah Anda yakin ingin menghapus item ini?')) {
@@ -856,7 +863,7 @@
                 }
             }
         };
-
+        
         // Fungsi untuk mengedit item (dibuat global agar bisa diakses dari onclick)
         window.editItem = async function(id) {
             const item = allStokData.find(item => item.id === id);
@@ -916,9 +923,10 @@
                 formTambahItem.scrollIntoView({ behavior: 'smooth' });
             }
         };
-
+        
         // Inisialisasi aplikasi
         renderStok();
     </script>
 </body>
+
 </html
