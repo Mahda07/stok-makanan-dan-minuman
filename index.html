@@ -1,76 +1,625 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Stok Bahan</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="container mt-5">
-        <h1 class="text-center mb-4"><i class="fas fa-warehouse"></i> Manajemen Stok Bahan</h1>
+    <title>Inventory Dapur - Manajemen Stok Bahan</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         
-        <!-- Form Tambah Item -->
-        <div class="card shadow-lg mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5><i class="fas fa-plus"></i> Tambah Item Baru</h5>
-            </div>
-            <div class="card-body">
-                <form id="itemForm">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <input type="text" id="itemName" class="form-control" placeholder="Nama Item" required>
-                        </div>
-                        <div class="col-md-3">
-                            <select id="itemCategory" class="form-control" required>
-                                <option value="">Pilih Kategori</option>
-                                <option value="Makanan">Makanan</option>
-                                <option value="Minuman">Minuman</option>
-                                <option value="Bahan Dapur">Bahan Dapur</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <input type="number" id="itemQuantity" class="form-control" placeholder="Jumlah" min="1" required>
-                        </div>
-                        <div class="col-md-2">
-                            <input type="number" id="itemPrice" class="form-control" placeholder="Harga (Rp)" min="0" step="0.01" required>
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-success w-100"><i class="fas fa-save"></i> Simpan</button>
-                        </div>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --food: #e74c3c;
+            --drink: #3498db;
+            --kitchen: #2ecc71;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            color: white;
+            padding: 25px 0;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            color: var(--success);
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 25px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--primary);
+            font-size: 1.4rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input,
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus,
+        select:focus {
+            border-color: var(--secondary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .filter-btn {
+            flex: 1;
+            padding: 10px;
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn.active {
+            background-color: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            padding: 15px;
+            text-align: left;
+            color: var(--primary);
+            font-weight: 600;
+            border-bottom: 2px solid #eee;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .category-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .category-food {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--food);
+        }
+        
+        .category-drink {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--drink);
+        }
+        
+        .category-kitchen {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: var(--kitchen);
+        }
+        
+        .stock-low {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        
+        .stock-ok {
+            color: var(--success);
+            font-weight: bold;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .sidebar-card {
+            position: sticky;
+            top: 20px;
+        }
+        
+        .inventory-summary {
+            margin-top: 20px;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .summary-value {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .notification-success {
+            background-color: var(--success);
+        }
+        
+        .notification-error {
+            background-color: var(--danger);
+        }
+        
+        .notification-warning {
+            background-color: var(--warning);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--dark);
+        }
+        
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--secondary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #bdc3c7;
+        }
+        
+        @media (max-width: 992px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .stats {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats {
+                flex-wrap: wrap;
+            }
+            
+            .filters {
+                flex-wrap: wrap;
+            }
+            
+            .actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-utensils"></i>
+                    <div>
+                        <h1>Inventory Dapur</h1>
+                        <p class="subtitle">Manajemen Stok Bahan Makanan, Minuman & Bahan Dapur</p>
                     </div>
-                </form>
+                </div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="total-items">0</div>
+                        <div class="stat-label">Total Item</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="low-stock">0</div>
+                        <div class="stat-label">Stok Rendah</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="categories-count">3</div>
+                        <div class="stat-label">Kategori</div>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <!-- Tabel Stok -->
-        <div class="card shadow-lg">
-            <div class="card-header bg-info text-white">
-                <h5><i class="fas fa-list"></i> Daftar Stok</h5>
+    </header>
+    
+    <div class="container">
+        <div class="main-content">
+            <div>
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-plus-circle"></i> Tambah Item Baru</h2>
+                    <form id="itemForm">
+                        <div class="form-group">
+                            <label for="itemName">Nama Item</label>
+                            <input type="text" id="itemName" placeholder="Contoh: Tepung Terigu, Minyak Goreng, Susu UHT" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemCategory">Kategori</label>
+                            <select id="itemCategory" required>
+                                <option value="">Pilih Kategori</option>
+                                <option value="food">Bahan Makanan</option>
+                                <option value="drink">Minuman</option>
+                                <option value="kitchen">Bahan Dapur</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemQuantity">Jumlah Stok</label>
+                            <input type="number" id="itemQuantity" min="0" placeholder="Contoh: 10" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemUnit">Satuan</label>
+                            <input type="text" id="itemUnit" placeholder="Contoh: kg, liter, pcs, bungkus" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemMinStock">Stok Minimum</label>
+                            <input type="number" id="itemMinStock" min="1" placeholder="Contoh: 5" required>
+                            <small style="color: #7f8c8d; font-size: 0.9rem;">Sistem akan memberi peringatan jika stok di bawah jumlah ini</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="itemLocation">Lokasi Penyimpanan</label>
+                            <input type="text" id="itemLocation" placeholder="Contoh: Lemari 1, Rak 2, Freezer">
+                        </div>
+                        
+                        <input type="hidden" id="itemId">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Simpan Item
+                        </button>
+                        <button type="button" class="btn" id="cancelEdit" style="background-color: #95a5a6; color: white; display: none;">
+                            <i class="fas fa-times"></i> Batal Edit
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title"><i class="fas fa-list"></i> Daftar Stok Inventory</h2>
+                    
+                    <div class="filters">
+                        <div class="filter-btn active" data-filter="all">Semua</div>
+                        <div class="filter-btn" data-filter="food">Makanan</div>
+                        <div class="filter-btn" data-filter="drink">Minuman</div>
+                        <div class="filter-btn" data-filter="kitchen">Dapur</div>
+                        <div class="filter-btn" data-filter="low">Stok Rendah</div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="inventoryTable">
+                            <thead>
+                                <tr>
+                                    <th>Nama Item</th>
+                                    <th>Kategori</th>
+                                    <th>Stok</th>
+                                    <th>Satuan</th>
+                                    <th>Lokasi</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryTableBody">
+                                <!-- Data akan dimuat dari Firebase -->
+                                <tr>
+                                    <td colspan="6" class="loading">
+                                        <div class="loading-spinner"></div>
+                                        <p>Memuat data inventory...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <table class="table table-striped table-hover" id="stockTable">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Nama</th>
-                            <th>Kategori</th>
-                            <th>Jumlah</th>
-                            <th>Harga</th>
-                            <th>Total</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="stockBody">
-                        <!-- Data akan diisi oleh JS -->
-                    </tbody>
-                </table>
+            
+            <div>
+                <div class="card sidebar-card">
+                    <h2 class="card-title"><i class="fas fa-chart-pie"></i> Ringkasan Stok</h2>
+                    
+                    <div class="inventory-summary">
+                        <div class="summary-item">
+                            <div class="summary-label">
+                                <i class="fas fa-utensils" style="color: var(--food);"></i>
+                                <span>Bahan Makanan</span>
+                            </div>
+                            <div class="summary-value" id="summary-food">0 item</div>
+                        </div>
+                        
+                        <div class="summary-item">
+                            <div class="summary-label">
+                                <i class="fas fa-wine-bottle" style="color: var(--drink);"></i>
+                                <span>Minuman</span>
+                            </div>
+                            <div class="summary-value" id="summary-drink">0 item</div>
+                        </div>
+                        
+                        <div class="summary-item">
+                            <div class="summary-label">
+                                <i class="fas fa-blender" style="color: var(--kitchen);"></i>
+                                <span>Bahan Dapur</span>
+                            </div>
+                            <div class="summary-value" id="summary-kitchen">0 item</div>
+                        </div>
+                        
+                        <div class="summary-item">
+                            <div class="summary-label">
+                                <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+                                <span>Stok Rendah</span>
+                            </div>
+                            <div class="summary-value" id="summary-low">0 item</div>
+                        </div>
+                        
+                        <div class="summary-item">
+                            <div class="summary-label">
+                                <i class="fas fa-boxes" style="color: var(--primary);"></i>
+                                <span>Total Stok</span>
+                            </div>
+                            <div class="summary-value" id="summary-total">0 item</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card sidebar-card">
+                    <h2 class="card-title"><i class="fas fa-info-circle"></i> Panduan Cepat</h2>
+                    <div style="margin-top: 15px;">
+                        <p><strong>1. Tambah Item:</strong> Isi formulir dan klik "Simpan Item"</p>
+                        <p><strong>2. Edit Item:</strong> Klik tombol edit pada tabel</p>
+                        <p><strong>3. Hapus Item:</strong> Klik tombol hapus pada tabel</p>
+                        <p><strong>4. Filter:</strong> Gunakan tombol filter untuk melihat kategori tertentu</p>
+                        <p><strong>5. Stok Rendah:</strong> Item dengan stok di bawah minimum akan ditandai dengan warna merah</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
+    <div id="notification" class="notification">
+        <i class="fas fa-check-circle"></i>
+        <span id="notification-text">Item berhasil ditambahkan!</span>
+    </div>
+    
+    <!-- Firebase Configuration -->
+    <script>
+        // Konfigurasi Firebase (ganti dengan konfigurasi project Anda)
+        const firebaseConfig = {
+  apiKey: "AIzaSyCfqZD7UZZt-GWmtNhfJyksrv3-8ENRjto",
+  authDomain: "insan-cemerlang-d5574.firebaseapp.com",
+  projectId: "insan-cemerlang-d5574",
+  storageBucket: "insan-cemerlang-d5574.firebasestorage.app",
+  messagingSenderId: "1035937160050",
+  appId: "1:1035937160050:web:6d77d3874c3f78b2811beb",
+  measurementId: "G-EVVQ80Q08C"
+};
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </script>
+    
     <script src="main.js"></script>
 </body>
+
 </html>
