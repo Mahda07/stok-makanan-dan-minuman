@@ -3,6 +3,7 @@
 const db = firebase.firestore();
 const inventoryCollection = db.collection('inventory');
 
+
 // Elemen DOM
 const itemForm = document.getElementById('itemForm');
 const itemName = document.getElementById('itemName');
