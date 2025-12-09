@@ -607,17 +607,26 @@
     <!-- Firebase Configuration -->
     <script>
         // Konfigurasi Firebase (ganti dengan konfigurasi project Anda)
-        const firebaseConfig = {
-  apiKey: "AIzaSyCfqZD7UZZt-GWmtNhfJyksrv3-8ENRjto",
-  authDomain: "insan-cemerlang-d5574.firebaseapp.com",
-  projectId: "insan-cemerlang-d5574",
-  storageBucket: "insan-cemerlang-d5574.firebasestorage.app",
-  messagingSenderId: "1035937160050",
-  appId: "1:1035937160050:web:6d77d3874c3f78b2811beb",
-  measurementId: "G-EVVQ80Q08C"
-};
+    // Konfigurasi Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCfqZD7UZZt-GWmtNhfJyksrv3-8ENRjto",
+        authDomain: "insan-cemerlang-d5574.firebaseapp.com",
+        projectId: "insan-cemerlang-d5574",
+        storageBucket: "insan-cemerlang-d5574.firebasestorage.app",
+        messagingSenderId: "1035937160050",
+        appId: "1:1035937160050:web:6d77d3874c3f78b2811beb",
+        measurementId: "G-EVVQ80Q08C"
+    };
 
-    </script>
+    // Inisialisasi Firebase
+    firebase.initializeApp(firebaseConfig);
+    
+    // Inisialisasi Firestore
+    const db = firebase.firestore();
+    
+    // Ekspor variabel db untuk digunakan di main.js
+    window.db = db;
+</script>
     
     <script src="main.js"></script>
 </body>
